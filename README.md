@@ -49,10 +49,10 @@ Pump **stops** when:
 
 ### Safety Timeout
 
-If the pump runs longer than **120 seconds**, it is automatically stopped and the controller enters **safety lock mode**.
+If the pump runs longer than **240 seconds**, it is automatically stopped and the controller enters **safety lock mode**.
 
 ### Cooldown
 
-The pump cannot restart for **5 seconds** after stopping.
+The pump cannot restart for **3 seconds** after stopping.
 
 ---

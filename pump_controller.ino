@@ -1,17 +1,18 @@
 #include <WiFi.h>
 #include <ArduinoOTA.h>
+#include "secrets.h"
 
-#define pinPressostato  18
-#define pinBomba        35
+#define pinPressostato 18
+#define pinBomba 35
 
-const char* ssid = "wifiSSID";
-const char* password = "wifiPASSWORD";
+const char *ssid = WIFI_SSID;
+const char *password = WIFI_PASSWORD;
 
 // Timing configuration
-const unsigned long tempoMinimoLow  = 2000;     // pressostat must stay LOW for 2s before starting pump
+const unsigned long tempoMinimoLow = 2000;      // pressostat must stay LOW for 2s before starting pump
 const unsigned long tempoMinimoHigh = 2000;     // pressostat must stay HIGH for 2s before stopping pump
-const unsigned long tempoMaximoLigado = 120000; // safety timeout (120 seconds)
-const unsigned long cooldown = 5000;            // minimum delay between pump cycles
+const unsigned long tempoMaximoLigado = 240000; // safety timeout (240 seconds)
+const unsigned long cooldown = 3000;            // minimum delay between pump cycles
 
 bool falhaSeguranca = false;
 bool bombaLigada = false;
@@ -20,17 +21,20 @@ unsigned long tempoEstadoPressostato = 0;
 unsigned long tempoBombaLigada = 0;
 unsigned long tempoUltimoDesligamento = 0;
 
-void setup() {
+void setup()
+{
 
   // Attempt WiFi connection for OTA
   WiFi.begin(ssid, password);
 
   unsigned long start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < 10000) {
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 10000)
+  {
     delay(100);
   }
 
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED)
+  {
     ArduinoOTA.setPassword(nullptr);
     ArduinoOTA.begin();
   }
@@ -44,13 +48,16 @@ void setup() {
   digitalWrite(LED_BUILTIN, LOW);
 }
 
-void loop() {
+void loop()
+{
 
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED)
+  {
     ArduinoOTA.handle();
   }
 
-  if (falhaSeguranca) {
+  if (falhaSeguranca)
+  {
     desligarBomba();
     return;
   }
@@ -59,41 +66,47 @@ void loop() {
   int estadoAtual = digitalRead(pinPressostato);
   unsigned long agora = millis();
 
-  if (estadoAtual != estadoAnterior) {
+  if (estadoAtual != estadoAnterior)
+  {
     tempoEstadoPressostato = agora;
     estadoAnterior = estadoAtual;
   }
 
   // Safety timeout
-  if (bombaLigada && (agora - tempoBombaLigada >= tempoMaximoLigado)) {
+  if (bombaLigada && (agora - tempoBombaLigada >= tempoMaximoLigado))
+  {
     desligarBomba();
     falhaSeguranca = true;
     return;
   }
 
   // Pump stop condition
-  if (bombaLigada) {
+  if (bombaLigada)
+  {
 
     if (estadoAtual == HIGH &&
-        (agora - tempoEstadoPressostato >= tempoMinimoHigh)) {
+        (agora - tempoEstadoPressostato >= tempoMinimoHigh))
+    {
 
       desligarBomba();
     }
-
-  } 
-  else {
+  }
+  else
+  {
 
     // Pump start condition
     if (estadoAtual == LOW &&
         (agora - tempoEstadoPressostato >= tempoMinimoLow) &&
-        (agora - tempoUltimoDesligamento >= cooldown)) {
+        (agora - tempoUltimoDesligamento >= cooldown))
+    {
 
       ligarBomba();
     }
   }
 }
 
-void ligarBomba() {
+void ligarBomba()
+{
 
   digitalWrite(pinBomba, HIGH);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -102,7 +115,8 @@ void ligarBomba() {
   bombaLigada = true;
 }
 
-void desligarBomba() {
+void desligarBomba()
+{
 
   digitalWrite(pinBomba, LOW);
   digitalWrite(LED_BUILTIN, LOW);
